@@ -1,32 +1,21 @@
+"""月桥拆解：把 prepare 的 payload 转成可读回的收入月桥与旅客/policy 判定。
+
+``measure`` 保留销售视角的期末 MRR 与差额证据（新增、扩张、收缩、流失按整笔金额计），
+``revenue`` 给出财务视角的按时段确认结果。两者共用同一组事件，因此可以互相对平。
+"""
+
 from app.business import measured
+from app.modules.revenue import build
 
 
-def compute(data):
-    current, close, changes = data
-    totals = {
-        "new_cents": 0,
-        "expansion_cents": 0,
-        "contraction_cents": 0,
-        "churn_cents": 0,
-    }
-    opening = current
-    for amount in changes:
-        if amount > current:
-            totals["new_cents" if current == 0 else "expansion_cents"] += (
-                amount - current
-            )
-        if amount < current:
-            totals["churn_cents" if amount == 0 else "contraction_cents"] += (
-                current - amount
-            )
-        current = amount
-    return measured(
-        opening
-        + totals["new_cents"]
-        + totals["expansion_cents"]
-        - totals["contraction_cents"]
-        - totals["churn_cents"],
-        close,
+def compute(payload):
+    revenue = build(payload)
+    totals = revenue["totals"]
+    evidence = {f"{kind}_cents": totals[kind]["full"] for kind in totals}
+    measure = measured(
+        revenue["closing_cents"],
+        revenue["closing_anchor_cents"],
         "分",
-        totals,
+        evidence,
     )
+    return measure, revenue

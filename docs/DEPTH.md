@@ -8,7 +8,7 @@
 |---|---|---|---|---|
 | M1 样例采信 | 预览并定位坏行 | `POST /api/stages/intake` | `app/intake/service.py` | `tests/test_intake.py` |
 | M2 变更排序 | 检查领域约束 | `POST /api/stages/prepare` | `app/modules/prepare.py` | `tests/test_prepare.py` |
-| M3 月桥拆解 | 查看业务计算结果 | `POST /api/stages/calculate` | `app/modules/calculate.py` | `tests/test_calculate.py` |
+| M3 月桥拆解 | 查看业务计算结果 | `POST /api/stages/calculate` | `app/modules/calculate.py`、`app/modules/revenue.py` | `tests/test_calculate.py`、`tests/test_revenue.py` |
 | M4 余额平衡 | 查看签收判定 | `POST /api/stages/policy` | `app/modules/policy.py` | `tests/test_policy.py` |
 | M5 运行对账 | 对照输入、采信和隔离行 | `POST /api/stages/balance` | `app/modules/reconcile.py` | `tests/test_reconcile.py` |
 | M6 批次复核 | 执行批次并签发或暂缓 | `POST /api/runs、PATCH /api/runs/<id>` | `app/review/service.py` | `tests/test_review.py` |
@@ -29,9 +29,17 @@
 | TRAP-16 | 引号未闭合时拒收文件 | `app/intake/reader.py` | `tests/test_intake.py::test_unclosed_quote_invalidates_source` |
 | TRAP-18 | 区分空文件、全空白和仅表头 | `app/intake/reader.py` | `tests/test_intake.py::test_empty_states_have_distinct_causes` |
 | TRAP-26 | 拒绝旧版本复核 | `app/review/store.py` | `tests/test_review.py::test_review_optimistic_lock` |
+| TRAP-27 | 月末事件只影响其后区间 | `app/modules/prepare.py` | `tests/test_revenue.py::test_month_end_change_only_affects_after_window` |
+| TRAP-28 | 同刻事件按来源序列、不重复计 | `app/modules/revenue.py` | `tests/test_revenue.py::test_same_minute_events_apply_in_sequence_without_double_count` |
+| TRAP-29 | 区间断档/重叠列明记录键并阻断 | `app/modules/prepare.py` | `tests/test_revenue.py::test_two_openings_are_overlap_with_both_keys` |
+| TRAP-30 | 同槽位金额/顺序冲突列明记录键 | `app/modules/prepare.py` | `tests/test_revenue.py::test_same_slot_conflicting_amounts_lists_keys` |
+| TRAP-31 | 同源重跑不重复确认 | `app/review/service.py` | `tests/test_revenue.py::test_rerun_of_same_bytes_recognizes_once` |
+| TRAP-32 | 发布失败保留旧版与证据 | `app/review/store.py` | `tests/test_publish_failure.py` |
 
 ## 领域反例
 
 minute 为结算窗口起点后的分钟。月桥使用 [0, close) 半开区间，同一时刻按来源序列执行。新增和重新激活合计，收缩与流失作为减项。
 
-逐组预期结论见 `tests/test_policy.py`，计算过程证据见 `tests/test_calculate.py`。
+财务视角按服务时长确认：`确认收入 = 期初 × 窗口 + Σ delta × (close − minute)`，并与销售视角的期末 MRR 通过 `期末 × 窗口 = 确认 + 递延` 对平。`revenue.items[].readback` 给出前向和与分段读回和，`checks` 逐项给出是否恒等；任一项不成立则该组非 READY，`balance` 阻止签发。
+
+逐组预期结论见 `tests/test_policy.py`，计算过程证据见 `tests/test_calculate.py` 与 `tests/test_revenue.py`。

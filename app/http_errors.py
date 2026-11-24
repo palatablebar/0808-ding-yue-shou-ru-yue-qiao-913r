@@ -15,6 +15,12 @@ LABELS = {
     "STALE_REVIEW": "批次已更新，请刷新",
     "RUN_FINALIZED": "批次已签发",
     "UNRESOLVED_ISSUES": "存在待处理差异",
+    "INTERVAL_GAP": "服务区间存在断档，请补齐记录",
+    "INTERVAL_OVERLAP": "服务区间边界重叠，请核对记录键",
+    "INVALID_PERIOD": "期末不晚于期初，无法建立月桥",
+    "ORDER_CONFLICT": "同一时刻序列槽位重复，请核对记录键",
+    "CHANGE_CONFLICT": "同一时刻金额冲突，请核对记录键",
+    "REVENUE_MISMATCH": "收入月桥读回不平，暂不可签发",
     "SAMPLE_UNKNOWN": "样例不存在",
     "STAGE_UNKNOWN": "处理阶段不存在",
 }
@@ -31,4 +37,9 @@ def response(error):
             else 413 if code == "FILE_TOO_LARGE" else 422
         )
     )
-    return jsonify(code=code, message=LABELS.get(code, code)), status
+    body = dict(code=code, message=LABELS.get(code, code))
+    if error.records:
+        body["records"] = error.records
+    if error.detail:
+        body["detail"] = error.detail
+    return jsonify(**body), status

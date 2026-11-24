@@ -30,7 +30,11 @@
 <section class="panel chart" aria-label="结果图"><h2>{{ p.chart }}</h2><div id="visual"></div></section>
 {% endmacro %}
 {% macro inspection() %}
-<section class="panel inspection"><h2 id="detail-title">采信摘要</h2><pre id="detail"></pre></section>
+<section class="panel inspection">
+  <h2 id="detail-title">采信摘要</h2>
+  <pre id="detail"></pre>
+  <div id="blockers" class="blockers" role="alert" hidden></div>
+</section>
 {% endmacro %}
 {% macro archive() %}
 <aside class="panel archive"><h2>批次复核</h2><ul id="history"></ul>

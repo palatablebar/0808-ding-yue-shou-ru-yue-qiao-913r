@@ -2,9 +2,16 @@
 
 
 class DomainIssue(ValueError):
-    def __init__(self, code):
+    """带定位信息的业务拒绝。
+
+    records 列出触发问题的记录键，detail 保留结构化上下文，供复核与证据导出读取。
+    """
+
+    def __init__(self, code, records=None, detail=None):
         super().__init__(code)
         self.code = code
+        self.records = list(records or ())
+        self.detail = detail
 
 
 def by_kind(rows, kind):

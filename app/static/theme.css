@@ -53,3 +53,5 @@ body.columns {margin:0;background:var(--bg);color:var(--ink);font:var(--size)/1.
 .bridge-tower .mark-piece {height:max(25px,var(--part));padding:2px;background:var(--button);color:var(--ink);border-top:4px solid var(--accent)}
 .bridge-tower:is(.bridge-2,.bridge-3) .mark-piece {border-top-color:var(--alert)}
 .bridge-total {margin-top:10px;font-weight:800;font-size:1.25rem}
+.columns .blockers {margin-top:12px;display:grid;gap:6px;font-size:.9em;color:var(--alert)}
+.columns .blockers .blocker {border-left:3px solid var(--alert);padding-left:8px;overflow-wrap:anywhere}
